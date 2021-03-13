@@ -98,7 +98,8 @@ struct GlobalState
 	int background_width;
 
 	// Audio variables
-	Mix_Music* music;
+	Mix_Music* musicMenu;
+	Mix_Music* musicIngame;
 	Mix_Chunk* fx_shoot;
 
 	// Game elements
@@ -172,12 +173,14 @@ void Start()
 	Mix_Init(MIX_INIT_OGG);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
 
-	// Menu Music
-	state.music = Mix_LoadMUS("Assets/menu.ogg");
+	// Music
+	state.musicMenu = Mix_LoadMUS("Assets/menu.ogg");
+	state.musicIngame = Mix_LoadMUS("Assets/ingame.ogg");
 	state.fx_shoot = Mix_LoadWAV("Assets/laser.wav");
 
 	// L4: TODO 2: Start playing loaded music
-	Mix_PlayMusic(state.music, -1);
+	Mix_PlayMusic(state.musicMenu, -1);
+
 
 	//Init srand
 	srand(time(NULL));
@@ -191,13 +194,16 @@ void Start()
 	state.scroll = 0;
 	state.meteorite_y = SCREEN_HEIGHT;
 	state.meteorite_x = (rand() % SCREEN_WIDTH);
+
+	state.currentScreen = LOGO;
 }
 
 // ----------------------------------------------------------------
 void Finish()
 {
 	// L4: TODO 3: Unload music/fx and deinitialize audio system
-	Mix_FreeMusic(state.music);
+	Mix_FreeMusic(state.musicMenu);
+	Mix_FreeMusic(state.musicIngame);
 	Mix_FreeChunk(state.fx_shoot);
 	Mix_CloseAudio();
 	Mix_Quit();
@@ -344,14 +350,13 @@ void MoveStuff()
 	} break;
 	case TITLE:
 	{
+		// Play Music Ingame
+		Mix_FadeOutMusic(10000);
+		Mix_FadeInMusic(state.musicIngame, -1, 1000);
 		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = GAMEPLAY;
 	} break;
 	case GAMEPLAY:
 	{
-		//Music ingame
-		Mix_FreeMusic(state.music);
-		state.music = Mix_LoadMUS("Assets/ingame.ogg");
-		Mix_PlayMusic(state.music, -1);
 
 		int cool = 10;
 
