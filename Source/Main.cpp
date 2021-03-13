@@ -353,6 +353,7 @@ void MoveStuff()
 		// Play Music Ingame
 		Mix_FadeOutMusic(10000);
 		Mix_FadeInMusic(state.musicIngame, -1, 1000);
+
 		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = GAMEPLAY;
 	} break;
 	case GAMEPLAY:
