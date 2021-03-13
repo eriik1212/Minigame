@@ -70,6 +70,18 @@ struct Projectile
 	bool alive;
 };
 
+struct Player
+{
+	int alive = 1;
+
+}p1;
+
+struct Player2
+{
+	int alive2 = 1;
+
+}p2;
+
 // Global context to store our game state data
 struct GlobalState
 {
@@ -103,14 +115,38 @@ struct GlobalState
 	Mix_Chunk* fx_shoot;
 
 	// Game elements
+	int ShowHitBox = 0;
+	int lser;
+
+	int shot_w;
+	int shot_h;
+
+	int shot_w2;
+	int shot_h2;
+
+	int laser_x;
+	int laser_y;
+	int laser_w;
+	int laser_h;
+
 	int ship_x;
 	int ship_y;
+	int ship_w;
+	int ship_h;
+
 	int ship_x2;
 	int ship_y2;
+	int ship_w2;
+	int ship_h2;
+
 	int meteorite_x;
 	int meteorite_y;
+	int meteorite_w;
+	int meteorite_h;
+
 	Projectile shots[MAX_SHIP_SHOTS];
 	Projectile shots2[MAX_SHIP_SHOTS];
+
 	int last_shot;
 	int scroll;
 
@@ -129,6 +165,48 @@ static void DrawCircle(int x, int y, int radius, SDL_Color color);
 
 // Functions Declarations and Definition
 // -------------------------------------------------------------------------
+
+void hitbox() {
+	//-----------------------------------------------------------------------LASER
+	//SHOW LASER
+	if (state.ship_x<state.laser_x - 100 + state.laser_w + 100 && state.ship_x + state.ship_w>state.laser_x - 100 && state.ship_y<state.laser_y + 100 + state.laser_h - 100 && state.ship_h + state.ship_y>state.laser_y + 100 && p1.alive == 1)
+	{
+		state.lser = 1;
+	}
+	else if (state.ship_x2<state.laser_x + 600 + state.laser_w - 400 && state.ship_x2 + state.ship_w2 >state.laser_x - 400 && state.ship_y2 < state.laser_y + 400 + state.laser_h - 400 && state.ship_h2 + state.ship_y2 > state.laser_y + 400 && p2.alive2==1)
+	{
+		state.lser = 1;
+	}
+	else state.lser = 0;
+
+
+
+	//LASER KILL
+	if (state.ship_x<state.laser_x + state.laser_w && state.ship_x + state.ship_w>state.laser_x && state.ship_y<state.laser_y + state.laser_h && state.ship_h + state.ship_y>state.laser_y)
+	{
+		p1.alive = 0;
+	}
+	if (state.ship_x2<state.laser_x + state.laser_w && state.ship_x2 + state.ship_w2>state.laser_x && state.ship_y2<state.laser_y + state.laser_h && state.ship_h2 + state.ship_y2>state.laser_y)
+	{
+		p2.alive2 = 0;
+	}
+
+	//SHOTS
+	for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
+	{
+		if (state.ship_x2< state.shots[i].x + state.shot_w && state.ship_x2 + state.ship_w2>state.shots[i].x && state.ship_y2<state.shots[i].y + state.shot_h && state.ship_h2 + state.ship_y2>state.shots[i].y)
+		{
+			p2.alive2 = 0;
+		}
+		if (state.ship_x< state.shots2[i].x + state.shot_w2 && state.ship_x + state.ship_w>state.shots2[i].x && state.ship_y<state.shots2[i].y + state.shot_h2 && state.ship_h + state.ship_y>state.shots2[i].y)
+		{
+			p1.alive
+				= 0;
+		}
+	}
+}
+
+
 void Start()
 {
 	// Initialize SDL internal global state
@@ -186,14 +264,36 @@ void Start()
 	srand(time(NULL));
 
 	// Init game variables
+
+	state.lser = 0;
+	state.shot_w = 10;
+	state.shot_h = 10;
+
+	state.shot_w2 = 10;
+	state.shot_h2 = 10;
+
+	state.laser_x = 500;
+	state.laser_y = 0;
+	state.laser_w = 200;
+	state.laser_h = 900;
+
 	state.ship_x = 100;
 	state.ship_y = SCREEN_HEIGHT / 2;
-	state.ship_x2= 600;
+	state.ship_w = 100;
+	state.ship_h = 100;
+
+	state.ship_x2= 800;
 	state.ship_y2 = SCREEN_HEIGHT / 2;
+	state.ship_w2 = 100;
+	state.ship_h2 = 100;
+
 	state.last_shot = 0;
 	state.scroll = 0;
+
 	state.meteorite_y = SCREEN_HEIGHT;
 	state.meteorite_x = (rand() % SCREEN_WIDTH);
+	state.meteorite_w = 100;
+	state.meteorite_h = 20;
 
 	state.currentScreen = LOGO;
 }
@@ -367,23 +467,42 @@ void MoveStuff()
 		if (state.ship_x < 0) state.ship_x = 0;
 		if (state.ship_y < 0) state.ship_y = 0;
 
-		//LIMITS of the MAP - SHIP-P2
+		//LIMITS of the MAP - SHIP-P
 		if ((state.ship_x2 + 64) > SCREEN_WIDTH) state.ship_x2 = SCREEN_WIDTH - 64;
 		if ((state.ship_y2 + 64) > SCREEN_HEIGHT) state.ship_y2 = SCREEN_HEIGHT - 64;
 		if (state.ship_x2 < 0) state.ship_x2 = 0;
 		if (state.ship_y2 < 0) state.ship_y2 = 0;
 
+		
+		//-----------------------------------------------ESPECIAL KEYS-------------------------------------------------------
+		//SHOW HIT BOX
+		if (state.keyboard[SDL_SCANCODE_9] == KEY_DOWN) 
+		{
+			if (state.ShowHitBox == 255)
+			{
+				state.ShowHitBox = 0;
+			}
+
+			else if (state.ShowHitBox == 0)
+			{
+				state.ShowHitBox = 255;
+			}
+
+		}
+
+
+
 		// L2: DONE 7: Move the ship with arrow keys
-		//_--------------------------------PLAYER 1
+		//_---------------------------------------------------PLAYER 1-----------------------------------------------------------
 		//------Y
-		if (state.keyboard[SDL_SCANCODE_W] == KEY_REPEAT) state.ship_y -= SHIP_SPEED;
-		else if (state.keyboard[SDL_SCANCODE_S] == KEY_REPEAT) state.ship_y += SHIP_SPEED;
+		if (state.keyboard[SDL_SCANCODE_W] == KEY_REPEAT && p1.alive==1) state.ship_y -= SHIP_SPEED;
+		else if (state.keyboard[SDL_SCANCODE_S] == KEY_REPEAT && p1.alive == 1) state.ship_y += SHIP_SPEED;
 		//------X
-		if (state.keyboard[SDL_SCANCODE_A] == KEY_REPEAT) state.ship_x -= SHIP_SPEED;
-		else if (state.keyboard[SDL_SCANCODE_D] == KEY_REPEAT) state.ship_x += SHIP_SPEED;
+		if (state.keyboard[SDL_SCANCODE_A] == KEY_REPEAT && p1.alive == 1) state.ship_x -= SHIP_SPEED;
+		else if (state.keyboard[SDL_SCANCODE_D] == KEY_REPEAT && p1.alive == 1) state.ship_x += SHIP_SPEED;
 
 		//------SHOT
-		if (state.keyboard[SDL_SCANCODE_G] == KEY_DOWN)
+		if (state.keyboard[SDL_SCANCODE_G] == KEY_DOWN && p1.alive == 1)
 		{
 			if (MAX_SHIP_SHOTS > 0) {
 				cool--;
@@ -400,10 +519,10 @@ void MoveStuff()
 			else cool++;
 
 
-			// L4: TODO 4: Play sound fx_shoot
+			//------Play sound fx_shoot
 			Mix_PlayChannel(-1, state.fx_shoot, 0);
 		}
-		//-----SHOTS PLAYER 
+		//-------LIFE OF  SHOTS PLAYER 
 		for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
 		{
 			if (state.shots[i].alive)
@@ -413,16 +532,16 @@ void MoveStuff()
 			}
 		}
 
-		//---------------------------------PLAYER 2
+		//---------------------------------PLAYER 2-----------------------------------------------------
 		//------Y
-		if (state.keyboard[SDL_SCANCODE_UP] == KEY_REPEAT) state.ship_y2 -= SHIP_SPEED;
-		else if (state.keyboard[SDL_SCANCODE_DOWN] == KEY_REPEAT) state.ship_y2 += SHIP_SPEED;
+		if (state.keyboard[SDL_SCANCODE_UP] == KEY_REPEAT && p2.alive2 == 1) state.ship_y2 -= SHIP_SPEED;
+		else if (state.keyboard[SDL_SCANCODE_DOWN] == KEY_REPEAT && p2.alive2 == 1) state.ship_y2 += SHIP_SPEED;
 		//------X
-		if (state.keyboard[SDL_SCANCODE_LEFT] == KEY_REPEAT) state.ship_x2 -= SHIP_SPEED;
-		else if (state.keyboard[SDL_SCANCODE_RIGHT] == KEY_REPEAT) state.ship_x2 += SHIP_SPEED;
+		if (state.keyboard[SDL_SCANCODE_LEFT] == KEY_REPEAT && p2.alive2 == 1) state.ship_x2 -= SHIP_SPEED;
+		else if (state.keyboard[SDL_SCANCODE_RIGHT] == KEY_REPEAT && p2.alive2 == 1) state.ship_x2 += SHIP_SPEED;
 
 		//------SHOT
-		if (state.keyboard[SDL_SCANCODE_L] == KEY_DOWN)
+		if (state.keyboard[SDL_SCANCODE_L] == KEY_DOWN && p2.alive2==1)
 		{
 			if (MAX_SHIP_SHOTS > 0) {
 				cool--;
@@ -439,11 +558,11 @@ void MoveStuff()
 			else cool++;
 
 
-			// L4: TODO 4: Play sound fx_shoot
+			// -----Play sound fx_shoot
 			Mix_PlayChannel(-1, state.fx_shoot, 0);
 		}
 
-		//-----SHOTS PLAYER 2
+		//-----LIFE OF SHOTS PLAYER 2
 		for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
 		{
 			if (state.shots2[i].alive)
@@ -491,14 +610,29 @@ void Draw()
 		rec.x += state.background_width;
 		SDL_RenderCopy(state.renderer, state.background, NULL, &rec);
 
-		// Draw ship rectangle
-		//DrawRectangle(state.ship_x, state.ship_y, 250, 100, { 255, 0, 0, 255 });
 
+		// Draw laser rectangle hitbox damage
+		DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 255, 0, 0, (Uint8)state.ShowHitBox });
+		if (state.lser == 1) {
+			DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 100, 0, 0, 255 });
+		}
+	
 		// Draw meteorite texture
 		rec.x = state.meteorite_x; rec.y = state.meteorite_y; rec.w = 96; rec.h = 96;
 		SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
 
+
 		// -----------------------PLAYER 1
+		// Draw ship rectangle hitbox
+	
+		if (p1.alive == 1)
+		{
+			DrawRectangle(state.ship_x, state.ship_y, state.ship_w, state.ship_h, { 255, 0, 0,  (Uint8)state.ShowHitBox });
+		}
+		else if (p1.alive == 0) 
+		{
+			SDL_DestroyTexture(state.ship);
+		}
 		rec.x = state.ship_x; rec.y = state.ship_y; rec.w = 64; rec.h = 64;
 		SDL_RenderCopy(state.renderer, state.ship, NULL, &rec);
 
@@ -507,27 +641,41 @@ void Draw()
 		{
 			if (state.shots[i].alive)
 			{
-				//DrawRectangle(state.shots[i].x, state.shots[i].y, 50, 20, { 0, 250, 0, 255 });
+				DrawRectangle(state.shots[i].x, state.shots[i].y, 50, 20, { 0, 250, 0,  (Uint8)state.ShowHitBox });
 				rec.x = state.shots[i].x; rec.y = state.shots[i].y;
 				SDL_RenderCopy(state.renderer, state.shot, NULL, &rec);
 			}
 		}
 		// -----------------------PLAYER 2
+		// Draw ship rectangle hitbox
+
+
+		if (p2.alive2 == 1)
+		{
+			DrawRectangle(state.ship_x2, state.ship_y2, state.ship_w2, state.ship_h2, { 255, 0, 0,  (Uint8)state.ShowHitBox });
+		}
+		else if (p2.alive2 == 0)
+		{
+			SDL_DestroyTexture(state.ship2);
+		}
+
 		rec.x = state.ship_x2; rec.y = state.ship_y2; rec.w = 64; rec.h = 64;
 		SDL_RenderCopy(state.renderer, state.ship2, NULL, &rec);
 
-
 		rec.w = 64; rec.h = 64;
+
 		for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
 		{
 			if (state.shots2[i].alive)
 			{
-				//DrawRectangle(state.shots[i].x, state.shots[i].y, 50, 20, { 0, 250, 0, 255 });
+				DrawRectangle(state.shots2[i].x, state.shots2[i].y, 50, 20, { 0, 250, 0, (Uint8)state.ShowHitBox });
 				rec.x = state.shots2[i].x; rec.y = state.shots2[i].y;
 				SDL_RenderCopy(state.renderer, state.shot2, NULL, &rec);
 			}
 		}
+
 	} break;
+
 	case ENDING:
 	{
 
@@ -548,6 +696,9 @@ int main(int argc, char* argv[])
 
 	while (CheckInput())
 	{
+		hitbox();
+
+
 		MoveStuff();
 
 		Draw();
