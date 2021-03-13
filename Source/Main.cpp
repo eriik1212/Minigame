@@ -40,6 +40,8 @@
 #define SHOT_SPEED			  12
 #define SCROLL_SPEED		   5
 
+#define MAX_LIFE 10
+
 enum WindowEvent
 {
 	WE_QUIT = 0,
@@ -107,6 +109,8 @@ struct GlobalState
 	SDL_Texture* ship2;
 	SDL_Texture* shot2;
 	SDL_Texture* meteorite;
+	SDL_Texture* life1[MAX_LIFE];
+	SDL_Texture* life2[MAX_LIFE];
 	int background_width;
 
 	// Audio variables
@@ -144,6 +148,16 @@ struct GlobalState
 	int meteorite_w;
 	int meteorite_h;
 
+	int life1_x[MAX_LIFE];
+	int life1_y[MAX_LIFE];
+	int life1_w[MAX_LIFE];
+	int life1_h[MAX_LIFE];
+
+	int life2_x[MAX_LIFE];
+	int life2_y[MAX_LIFE];
+	int life2_w[MAX_LIFE];
+	int life2_h[MAX_LIFE];
+
 	Projectile shots[MAX_SHIP_SHOTS];
 	Projectile shots2[MAX_SHIP_SHOTS];
 
@@ -166,6 +180,32 @@ static void DrawCircle(int x, int y, int radius, SDL_Color color);
 // Functions Declarations and Definition
 // -------------------------------------------------------------------------
 
+void updateLifeIndicatorPlayer1(unsigned short* lifeIndicatorP1, unsigned short damage)
+{
+	for (int i = (MAX_LIFE - 1); i >= 0; --i) {
+
+		if (*(lifeIndicatorP1 + i) == 0) {
+			++damage;
+		}
+		else if (*(lifeIndicatorP1 + i) == 1 && i >= (MAX_LIFE - damage)) {
+			*(lifeIndicatorP1 + i) = 0;
+		}
+	}
+}
+
+void updateLifeIndicatorPlayer2(unsigned short* lifeIndicatorP2, unsigned short damage)
+{
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		if (*(lifeIndicatorP2 + i) == 0) {
+			++damage;
+		}
+		else if (*(lifeIndicatorP2 + i) == 1 && i < damage) {
+			*(lifeIndicatorP2 + i) = 0;
+		}
+	}
+}
+
+
 void hitbox() {
 	//-----------------------------------------------------------------------LASER
 	//SHOW LASER
@@ -180,15 +220,43 @@ void hitbox() {
 	else state.lser = 0;
 
 
+	//LIFE ELEMENTS
+	unsigned short life1[MAX_LIFE];
+	unsigned short life2[MAX_LIFE];
+
+	// Load Lifes P1 & P2
+	for (int i = 0; i < 10; ++i) {
+		life1[i] = 1;
+	}
+	for (int i = 0; i < 10; ++i) {
+		life2[i] = 1;
+	}
 
 	//LASER KILL
 	if (state.ship_x<state.laser_x + state.laser_w && state.ship_x + state.ship_w>state.laser_x && state.ship_y<state.laser_y + state.laser_h && state.ship_h + state.ship_y>state.laser_y)
 	{
-		p1.alive = 0;
+		updateLifeIndicatorPlayer1(life1, 2);
+		for (int i = 0; i < MAX_LIFE; ++i) {
+			if (life1[i] == 0) {
+				SDL_DestroyTexture(state.life1[i]);
+			}
+		}
+		if (life1[0] == 0) {
+			p1.alive = 0;
+		}
 	}
 	if (state.ship_x2<state.laser_x + state.laser_w && state.ship_x2 + state.ship_w2>state.laser_x && state.ship_y2<state.laser_y + state.laser_h && state.ship_h2 + state.ship_y2>state.laser_y)
 	{
-		p2.alive2 = 0;
+		updateLifeIndicatorPlayer2(life2, 2);
+		for (int i = 0; i < MAX_LIFE; ++i) {
+
+			if (life2[i] == 0) {
+				SDL_DestroyTexture(state.life2[i]);
+			}
+		}
+		if (life2[MAX_LIFE-1] == 0) {
+			p2.alive2 = 0;
+		}
 	}
 
 	//SHOTS
@@ -196,15 +264,32 @@ void hitbox() {
 	{
 		if (state.ship_x2< state.shots[i].x + state.shot_w && state.ship_x2 + state.ship_w2>state.shots[i].x && state.ship_y2<state.shots[i].y + state.shot_h && state.ship_h2 + state.ship_y2>state.shots[i].y)
 		{
-			p2.alive2 = 0;
+			updateLifeIndicatorPlayer2(life2, 1);
+			for (int i = 0; i < MAX_LIFE; ++i) {
+
+				if (life2[i] == 0) {
+					SDL_DestroyTexture(state.life2[i]);
+				}
+			}
+			if (life2[MAX_LIFE - 1] == 0) {
+				p2.alive2 = 0;
+			}
 		}
 		if (state.ship_x< state.shots2[i].x + state.shot_w2 && state.ship_x + state.ship_w>state.shots2[i].x && state.ship_y<state.shots2[i].y + state.shot_h2 && state.ship_h + state.ship_y>state.shots2[i].y)
 		{
-			p1.alive
-				= 0;
+			updateLifeIndicatorPlayer1(life1, 1);
+				for (int i = 0; i < MAX_LIFE; ++i) {
+					if (life1[i] == 0) {
+						SDL_DestroyTexture(state.life1[i]);
+					}
+					if (life1[0] == 0) {
+						p1.alive = 0;
+					}
+				}
 		}
 	}
 }
+
 
 
 void Start()
@@ -238,12 +323,19 @@ void Start()
 
 	// Init image system and load textures
 	IMG_Init(IMG_INIT_PNG);
-	state.background = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/background.png"));
+	state.background = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Windowsxp.png"));
 	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
 	state.shot = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shot.png"));
 	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
 	state.shot2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shot.png"));
 	state.meteorite = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/meteorite_sprite.png"));
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		state.life1[i] = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Heart.png"));
+	}
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		state.life2[i] = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Heart.png"));
+	}
+
 	SDL_QueryTexture(state.background, NULL, NULL, &state.background_width, NULL);
 
 	// L4: TODO 1: Init audio system and load music/fx
@@ -295,6 +387,23 @@ void Start()
 	state.meteorite_w = 100;
 	state.meteorite_h = 20;
 
+	int sepx1=0;
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		state.life1_y[i] = 10;
+		state.life1_x[i] = sepx1+=30;
+		state.life1_w[i] = 20;
+		state.life1_h[i] = 20;
+	}
+
+	int sepx2 = 0;
+	for (int i = MAX_LIFE-1; i >= 0; --i) {
+		state.life2_y[i] = 10;
+		state.life2_x[i] = SCREEN_WIDTH - (sepx2+=30);
+		state.life2_w[i] = 20;
+		state.life2_h[i] = 20;
+	}
+
+
 	state.currentScreen = LOGO;
 }
 
@@ -313,6 +422,12 @@ void Finish()
 	SDL_DestroyTexture(state.ship);
 	SDL_DestroyTexture(state.ship2);
 	SDL_DestroyTexture(state.meteorite);
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		SDL_DestroyTexture(state.life1[i]);
+	}
+	for (int i = 0; i < MAX_LIFE; ++i) {
+		SDL_DestroyTexture(state.life2[i]);
+	}
 	IMG_Quit();
 
 	// L2: DONE 3: Close game controller
@@ -451,14 +566,13 @@ void MoveStuff()
 	case TITLE:
 	{
 		// Play Music Ingame
-		Mix_FadeOutMusic(5000);
+		Mix_FadeOutMusic(2000);
 		Mix_FadeInMusic(state.musicIngame, -1, 1000);
 
 		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = GAMEPLAY;
 	} break;
 	case GAMEPLAY:
 	{
-
 		int cool = 10;
 
 		//LIMITS of the MAP - SHIP-P1
@@ -467,7 +581,7 @@ void MoveStuff()
 		if (state.ship_x < 0) state.ship_x = 0;
 		if (state.ship_y < 0) state.ship_y = 0;
 
-		//LIMITS of the MAP - SHIP-P
+		//LIMITS of the MAP - SHIP-P2
 		if ((state.ship_x2 + 64) > SCREEN_WIDTH) state.ship_x2 = SCREEN_WIDTH - 64;
 		if ((state.ship_y2 + 64) > SCREEN_HEIGHT) state.ship_y2 = SCREEN_HEIGHT - 64;
 		if (state.ship_x2 < 0) state.ship_x2 = 0;
@@ -599,15 +713,9 @@ void Draw()
 	} break;
 	case GAMEPLAY:
 	{
-		// Draw background and scroll
-		state.scroll += SCROLL_SPEED;
-		if (state.scroll >= state.background_width)	state.scroll = 0;
-
 		// Draw background texture (two times for scrolling effect)
 		// NOTE: rec rectangle is being reused for next draws
-		SDL_Rect rec = { -state.scroll, 0, state.background_width, SCREEN_HEIGHT };
-		SDL_RenderCopy(state.renderer, state.background, NULL, &rec);
-		rec.x += state.background_width;
+		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 		SDL_RenderCopy(state.renderer, state.background, NULL, &rec);
 
 
@@ -620,6 +728,21 @@ void Draw()
 		// Draw meteorite texture
 		rec.x = state.meteorite_x; rec.y = state.meteorite_y; rec.w = 96; rec.h = 96;
 		SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
+
+		// Draw lifes textures
+		// P1
+		for (int i = 0; i < MAX_LIFE; ++i) {
+			rec.x = state.life1_x[i]; rec.y = state.life1_y[i]; rec.w = 20; rec.h = 20;
+			SDL_RenderCopy(state.renderer, state.life1[i], NULL, &rec);
+		}
+
+
+		//P2
+		for (int i = 0; i < MAX_LIFE; ++i) {
+			rec.x = state.life2_x[i]; rec.y = state.life2_y[i]; rec.w = 20; rec.h = 20;
+			SDL_RenderCopy(state.renderer, state.life2[i], NULL, &rec);
+		}
+
 
 
 		// -----------------------PLAYER 1
@@ -646,6 +769,7 @@ void Draw()
 				SDL_RenderCopy(state.renderer, state.shot, NULL, &rec);
 			}
 		}
+
 		// -----------------------PLAYER 2
 		// Draw ship rectangle hitbox
 
@@ -697,7 +821,6 @@ int main(int argc, char* argv[])
 	while (CheckInput())
 	{
 		hitbox();
-
 
 		MoveStuff();
 
