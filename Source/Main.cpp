@@ -84,6 +84,12 @@ struct Player2
 
 }p2;
 
+struct meteorite
+{
+	bool alive;
+
+}meteo[10];
+
 // Global context to store our game state data
 struct GlobalState
 {
@@ -108,6 +114,7 @@ struct GlobalState
 	SDL_Texture* shot;
 	SDL_Texture* ship2;
 	SDL_Texture* shot2;
+	SDL_Texture* laser;
 	SDL_Texture* meteorite;
 	SDL_Texture* life1[MAX_LIFE];
 	SDL_Texture* life2[MAX_LIFE];
@@ -143,10 +150,10 @@ struct GlobalState
 	int ship_w2;
 	int ship_h2;
 
-	int meteorite_x;
-	int meteorite_y;
-	int meteorite_w;
-	int meteorite_h;
+	int meteorite_x[10];
+	int meteorite_y[10];
+	int meteorite_w[10];
+	int meteorite_h[10];
 
 	int life1_x[MAX_LIFE];
 	int life1_y[MAX_LIFE];
@@ -206,14 +213,15 @@ void updateLifeIndicatorPlayer2(unsigned short* lifeIndicatorP2, unsigned short 
 }
 
 
+
 void hitbox() {
 	//-----------------------------------------------------------------------LASER
 	//SHOW LASER
-	if (state.ship_x<state.laser_x - 100 + state.laser_w + 100 && state.ship_x + state.ship_w>state.laser_x - 100 && state.ship_y<state.laser_y + 100 + state.laser_h - 100 && state.ship_h + state.ship_y>state.laser_y + 100 && p1.alive == 1)
+	if (state.ship_x<state.laser_x  + state.laser_w  && state.ship_x + state.ship_w >state.laser_x - 200 && state.ship_y<state.laser_y  + state.laser_h  && state.ship_h + state.ship_y>state.laser_y  && p1.alive == 1)
 	{
 		state.lser = 1;
 	}
-	else if (state.ship_x2<state.laser_x + 600 + state.laser_w - 400 && state.ship_x2 + state.ship_w2 >state.laser_x - 400 && state.ship_y2 < state.laser_y + 400 + state.laser_h - 400 && state.ship_h2 + state.ship_y2 > state.laser_y + 400 && p2.alive2==1)
+	else if (state.ship_x2<state.laser_x  + state.laser_w + 200  && state.ship_x2 + state.ship_w2 >state.laser_x  && state.ship_y2 < state.laser_y  + state.laser_h  && state.ship_h2 + state.ship_y2 > state.laser_y && p2.alive2==1)
 	{
 		state.lser = 1;
 	}
@@ -232,29 +240,39 @@ void hitbox() {
 		life2[i] = 1;
 	}
 
+
 	//LASER KILL
-	if (state.ship_x<state.laser_x + state.laser_w && state.ship_x + state.ship_w>state.laser_x && state.ship_y<state.laser_y + state.laser_h && state.ship_h + state.ship_y>state.laser_y)
+
+	if (state.ship_x < state.laser_x + state.laser_w && state.ship_x + state.ship_w > state.laser_x && state.ship_y < state.laser_y + state.laser_h && state.ship_h + state.ship_y > state.laser_y)
 	{
-		updateLifeIndicatorPlayer1(life1, 2);
+
+			updateLifeIndicatorPlayer1(life1, 10);
+
 		for (int i = 0; i < MAX_LIFE; ++i) {
+
 			if (life1[i] == 0) {
 				SDL_DestroyTexture(state.life1[i]);
 			}
 		}
+
 		if (life1[0] == 0) {
 			p1.alive = 0;
 		}
+		
 	}
-	if (state.ship_x2<state.laser_x + state.laser_w && state.ship_x2 + state.ship_w2>state.laser_x && state.ship_y2<state.laser_y + state.laser_h && state.ship_h2 + state.ship_y2>state.laser_y)
+
+	if (state.ship_x2 < state.laser_x + state.laser_w && state.ship_x2 + state.ship_w2 > state.laser_x && state.ship_y2 < state.laser_y + state.laser_h && state.ship_h2 + state.ship_y2 > state.laser_y)
 	{
-		updateLifeIndicatorPlayer2(life2, 2);
+	
+
+		updateLifeIndicatorPlayer2(life2, 10);
 		for (int i = 0; i < MAX_LIFE; ++i) {
 
 			if (life2[i] == 0) {
 				SDL_DestroyTexture(state.life2[i]);
 			}
 		}
-		if (life2[MAX_LIFE-1] == 0) {
+		if (life2[MAX_LIFE - 1] == 0) {
 			p2.alive2 = 0;
 		}
 	}
@@ -264,24 +282,32 @@ void hitbox() {
 	{
 		if (state.ship_x2< state.shots[i].x + state.shot_w && state.ship_x2 + state.ship_w2>state.shots[i].x && state.ship_y2<state.shots[i].y + state.shot_h && state.ship_h2 + state.ship_y2>state.shots[i].y)
 		{
+
+			state.shots[i].alive=false;
 			updateLifeIndicatorPlayer2(life2, 1);
 			for (int i = 0; i < MAX_LIFE; ++i) {
 
 				if (life2[i] == 0) {
 					SDL_DestroyTexture(state.life2[i]);
 				}
+
 			}
 			if (life2[MAX_LIFE - 1] == 0) {
 				p2.alive2 = 0;
 			}
 		}
+
 		if (state.ship_x< state.shots2[i].x + state.shot_w2 && state.ship_x + state.ship_w>state.shots2[i].x && state.ship_y<state.shots2[i].y + state.shot_h2 && state.ship_h + state.ship_y>state.shots2[i].y)
 		{
+			state.shots2[i].alive = false;
 			updateLifeIndicatorPlayer1(life1, 1);
+
 				for (int i = 0; i < MAX_LIFE; ++i) {
+
 					if (life1[i] == 0) {
 						SDL_DestroyTexture(state.life1[i]);
 					}
+
 					if (life1[0] == 0) {
 						p1.alive = 0;
 					}
@@ -289,7 +315,6 @@ void hitbox() {
 		}
 	}
 }
-
 
 
 void Start()
@@ -382,10 +407,10 @@ void Start()
 	state.last_shot = 0;
 	state.scroll = 0;
 
-	state.meteorite_y = SCREEN_HEIGHT;
-	state.meteorite_x = (rand() % SCREEN_WIDTH);
-	state.meteorite_w = 100;
-	state.meteorite_h = 20;
+	state.meteorite_y[10] = SCREEN_HEIGHT;
+	state.meteorite_x[10] = rand() % SCREEN_WIDTH;
+	state.meteorite_w[10] = 100;
+	state.meteorite_h[10] = 20;
 
 	int sepx1=0;
 	for (int i = 0; i < MAX_LIFE; ++i) {
@@ -685,6 +710,16 @@ void MoveStuff()
 				else state.shots2[i].alive = false;
 			}
 		}
+
+		//meteorite move
+		for (int i = 0; i < 10; ++i)
+		{
+			state.meteorite_y[i] += 1;
+			if (state.meteorite_y[i] < SCREEN_WIDTH) {
+				meteo[i].alive = false;
+
+			}
+		}
 	} break;
 	case ENDING:
 	{
@@ -721,13 +756,20 @@ void Draw()
 
 		// Draw laser rectangle hitbox damage
 		DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 255, 0, 0, (Uint8)state.ShowHitBox });
+
 		if (state.lser == 1) {
 			DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 100, 0, 0, 255 });
 		}
 	
 		// Draw meteorite texture
-		rec.x = state.meteorite_x; rec.y = state.meteorite_y; rec.w = 96; rec.h = 96;
-		SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
+		for (int p = 0; p < 10; p++) {
+
+			DrawRectangle(state.meteorite_x[p]+rand()%800, state.meteorite_y[p], state.ship_w, state.ship_h, { 255, 0, 0,  (Uint8)state.ShowHitBox });
+			rec.x = state.meteorite_x[p]; rec.y = state.meteorite_y[p]; rec.w = 96; rec.h = 96;
+			SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
+
+		}
+		
 
 		// Draw lifes textures
 		// P1
