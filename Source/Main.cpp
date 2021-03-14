@@ -60,10 +60,11 @@ enum KeyState
 
 enum GameScreen
 {
-	LOGO = 0,
-	TITLE,
+	MENU = 0,
+	CONTROLS,
 	GAMEPLAY,
-	ENDING
+	ENDINGP1,
+	ENDINGP2
 };
 
 struct Projectile
@@ -110,6 +111,10 @@ struct GlobalState
 
 	// Texture variables
 	SDL_Texture* background;
+	SDL_Texture* menu;
+	SDL_Texture* controls;
+	SDL_Texture* p1win;
+	SDL_Texture* p2win;
 	SDL_Texture* ship;
 	SDL_Texture* shot;
 	SDL_Texture* ship2;
@@ -123,6 +128,7 @@ struct GlobalState
 	// Audio variables
 	Mix_Music* musicMenu;
 	Mix_Music* musicIngame;
+	Mix_Music* musicvictory;
 	Mix_Chunk* fx_shoot;
 
 	// Game elements
@@ -166,7 +172,7 @@ struct GlobalState
 	int last_shot;
 	int scroll;
 
-	GameScreen currentScreen;		// 0-LOGO, 1-TITLE, 2-GAMEPLAY, 3-ENDING
+	GameScreen currentScreen;		// 0-LOGO, 1-TITLE, 2-GAMEPLAY, 3-ENDINGP1, 4-ENDINGP2
 };
 
 // Global game state variable
@@ -294,6 +300,9 @@ void Start()
 	// Init image system and load textures
 	IMG_Init(IMG_INIT_PNG);
 	state.background = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Windowsxp.png"));
+	state.menu = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/MENU.png"));
+	state.p1win = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/endgamep1.png"));
+	state.p2win = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/endgamep2.png"));
 	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
 	state.shot = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW1.png"));
 	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
@@ -316,6 +325,7 @@ void Start()
 	// Music
 	state.musicMenu = Mix_LoadMUS("Assets/menu.ogg");
 	state.musicIngame = Mix_LoadMUS("Assets/ingame.ogg");
+	state.musicvictory = Mix_LoadMUS("Assets/victory.ogg");
 	state.fx_shoot = Mix_LoadWAV("Assets/laser.wav");
 
 	// L4: TODO 2: Start playing loaded music
@@ -367,7 +377,7 @@ void Start()
 	}
 
 
-	state.currentScreen = LOGO;
+	state.currentScreen = MENU;
 }
 
 // ----------------------------------------------------------------
@@ -376,6 +386,7 @@ void Finish()
 	// L4: TODO 3: Unload music/fx and deinitialize audio system
 	Mix_FreeMusic(state.musicMenu);
 	Mix_FreeMusic(state.musicIngame);
+	Mix_FreeMusic(state.musicvictory);
 	Mix_FreeChunk(state.fx_shoot);
 	Mix_CloseAudio();
 	Mix_Quit();
@@ -522,20 +533,23 @@ void MoveStuff()
 {
 	switch (state.currentScreen)
 	{
-	case LOGO:
+	case MENU:
 	{
-		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = TITLE;
+		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = CONTROLS;
 	} break;
-	case TITLE:
+	case CONTROLS:
 	{
 		// Play Music Ingame
-		Mix_FadeOutMusic(1000);
-		Mix_FadeInMusic(state.musicIngame, -1, 1000);
+		Mix_FadeOutMusic(2000);
 
-		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = GAMEPLAY;
+		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) {
+			state.currentScreen = GAMEPLAY; 	
+			Mix_PlayMusic(state.musicIngame, -1);
+		}
 	} break;
 	case GAMEPLAY:
 	{
+
 		int cool = 10;
 
 		//LIMITS of the MAP - SHIP-P1
@@ -717,10 +731,21 @@ void MoveStuff()
 
 			}
 		}
-	} break;
-	case ENDING:
-	{
 
+		if (p2.alive2 == 0) state.currentScreen = ENDINGP1;	
+		if (p1.alive == 0) state.currentScreen = ENDINGP2;
+	} break;
+	case ENDINGP1:
+	{
+		if (p2.alive2 == 0) {
+			Mix_PlayMusic(state.musicvictory, -1);
+		}
+	} break;
+	case ENDINGP2:
+	{
+		if (p1.alive == 0) {
+			Mix_PlayMusic(state.musicvictory, -1);
+		}
 	} break;
 	default: break;
 	}
@@ -735,11 +760,12 @@ void Draw()
 
 	switch (state.currentScreen)
 	{
-	case LOGO:
+	case MENU:
 	{
-
+		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		SDL_RenderCopy(state.renderer, state.menu, NULL, &rec);
 	} break;
-	case TITLE:
+	case CONTROLS:
 	{
 
 	} break;
@@ -830,9 +856,15 @@ void Draw()
 
 	} break;
 
-	case ENDING:
+	case ENDINGP1:
 	{
-
+		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		SDL_RenderCopy(state.renderer, state.p1win, NULL, &rec);
+	} break;
+	case ENDINGP2:
+	{
+		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		SDL_RenderCopy(state.renderer, state.p2win, NULL, &rec);
 	} break;
 	default: break;
 	}
