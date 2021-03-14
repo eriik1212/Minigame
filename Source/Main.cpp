@@ -135,11 +135,6 @@ struct GlobalState
 	int shot_w2;
 	int shot_h2;
 
-	int laser_x;
-	int laser_y;
-	int laser_w;
-	int laser_h;
-
 	int ship_x;
 	int ship_y;
 	int ship_w;
@@ -215,19 +210,6 @@ void updateLifeIndicatorPlayer2(unsigned short* lifeIndicatorP2, unsigned short 
 
 
 void hitbox() {
-	//-----------------------------------------------------------------------LASER
-	//SHOW LASER
-	if (state.ship_x<state.laser_x  + state.laser_w  && state.ship_x + state.ship_w >state.laser_x - 200 && state.ship_y<state.laser_y  + state.laser_h  && state.ship_h + state.ship_y>state.laser_y  && p1.alive == 1)
-	{
-		state.lser = 1;
-	}
-	else if (state.ship_x2<state.laser_x  + state.laser_w + 200  && state.ship_x2 + state.ship_w2 >state.laser_x  && state.ship_y2 < state.laser_y  + state.laser_h  && state.ship_h2 + state.ship_y2 > state.laser_y && p2.alive2==1)
-	{
-		state.lser = 1;
-	}
-	else state.lser = 0;
-
-
 	//LIFE ELEMENTS
 	unsigned short life1[MAX_LIFE];
 	unsigned short life2[MAX_LIFE];
@@ -238,43 +220,6 @@ void hitbox() {
 	}
 	for (int i = 0; i < 10; ++i) {
 		life2[i] = 1;
-	}
-
-
-	//LASER KILL
-
-	if (state.ship_x < state.laser_x + state.laser_w && state.ship_x + state.ship_w > state.laser_x && state.ship_y < state.laser_y + state.laser_h && state.ship_h + state.ship_y > state.laser_y)
-	{
-
-			updateLifeIndicatorPlayer1(life1, 10);
-
-		for (int i = 0; i < MAX_LIFE; ++i) {
-
-			if (life1[i] == 0) {
-				SDL_DestroyTexture(state.life1[i]);
-			}
-		}
-
-		if (life1[0] == 0) {
-			p1.alive = 0;
-		}
-		
-	}
-
-	if (state.ship_x2 < state.laser_x + state.laser_w && state.ship_x2 + state.ship_w2 > state.laser_x && state.ship_y2 < state.laser_y + state.laser_h && state.ship_h2 + state.ship_y2 > state.laser_y)
-	{
-	
-
-		updateLifeIndicatorPlayer2(life2, 10);
-		for (int i = 0; i < MAX_LIFE; ++i) {
-
-			if (life2[i] == 0) {
-				SDL_DestroyTexture(state.life2[i]);
-			}
-		}
-		if (life2[MAX_LIFE - 1] == 0) {
-			p2.alive2 = 0;
-		}
 	}
 
 	//SHOTS
@@ -326,7 +271,7 @@ void Start()
 	//if (SDL_InitSubSystem(SDL_INIT_EVENTS) < 0) printf("SDL_EVENTS could not be initialized! SDL_Error: %s\n", SDL_GetError());
 
 	// Init window
-	state.window = SDL_CreateWindow("Super Awesome Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	state.window = SDL_CreateWindow("W Fight!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	state.surface = SDL_GetWindowSurface(state.window);
 
 	// Init renderer
@@ -350,9 +295,9 @@ void Start()
 	IMG_Init(IMG_INIT_PNG);
 	state.background = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Windowsxp.png"));
 	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
-	state.shot = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shot.png"));
+	state.shot = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW1.png"));
 	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
-	state.shot2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shot.png"));
+	state.shot2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW.png"));
 	state.meteorite = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/meteorite_sprite.png"));
 	for (int i = 0; i < MAX_LIFE; ++i) {
 		state.life1[i] = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Heart.png"));
@@ -381,34 +326,27 @@ void Start()
 	srand(time(NULL));
 
 	// Init game variables
+	state.shot_w = 30;
+	state.shot_h = 30;
 
-	state.lser = 0;
-	state.shot_w = 10;
-	state.shot_h = 10;
-
-	state.shot_w2 = 10;
-	state.shot_h2 = 10;
-
-	state.laser_x = 500;
-	state.laser_y = 0;
-	state.laser_w = 200;
-	state.laser_h = 900;
+	state.shot_w2 = 30;
+	state.shot_h2 = 30;
 
 	state.ship_x = 100;
 	state.ship_y = SCREEN_HEIGHT / 2;
-	state.ship_w = 100;
-	state.ship_h = 100;
+	state.ship_w = 64;
+	state.ship_h = 64;
 
-	state.ship_x2= 800;
+	state.ship_x2= 1180;
 	state.ship_y2 = SCREEN_HEIGHT / 2;
-	state.ship_w2 = 100;
-	state.ship_h2 = 100;
+	state.ship_w2 = 64;
+	state.ship_h2 = 64;
 
 	state.last_shot = 0;
 	state.scroll = 0;
 
 	state.meteorite_y[10] = SCREEN_HEIGHT;
-	state.meteorite_x[10] = rand() % SCREEN_WIDTH;
+	state.meteorite_x[10] = (rand() % SCREEN_WIDTH);
 	state.meteorite_w[10] = 100;
 	state.meteorite_h[10] = 20;
 
@@ -591,7 +529,7 @@ void MoveStuff()
 	case TITLE:
 	{
 		// Play Music Ingame
-		Mix_FadeOutMusic(2000);
+		Mix_FadeOutMusic(1000);
 		Mix_FadeInMusic(state.musicIngame, -1, 1000);
 
 		if (state.keyboard[SDL_SCANCODE_RETURN] == KEY_DOWN) state.currentScreen = GAMEPLAY;
@@ -601,15 +539,15 @@ void MoveStuff()
 		int cool = 10;
 
 		//LIMITS of the MAP - SHIP-P1
-		if ((state.ship_x + 64) > SCREEN_WIDTH) state.ship_x = SCREEN_WIDTH - 64;
+		if ((state.ship_x + 64) > SCREEN_WIDTH/2) state.ship_x = (SCREEN_WIDTH/2) - 64;
 		if ((state.ship_y + 64) > SCREEN_HEIGHT) state.ship_y = SCREEN_HEIGHT - 64;
 		if (state.ship_x < 0) state.ship_x = 0;
 		if (state.ship_y < 0) state.ship_y = 0;
 
 		//LIMITS of the MAP - SHIP-P2
-		if ((state.ship_x2 + 64) > SCREEN_WIDTH) state.ship_x2 = SCREEN_WIDTH - 64;
+		if ((state.ship_x2) < SCREEN_WIDTH/2) state.ship_x2 = (SCREEN_WIDTH/2);
 		if ((state.ship_y2 + 64) > SCREEN_HEIGHT) state.ship_y2 = SCREEN_HEIGHT - 64;
-		if (state.ship_x2 < 0) state.ship_x2 = 0;
+		if ((state.ship_x2 + 64 )> SCREEN_WIDTH) state.ship_x2 = SCREEN_WIDTH - 64;
 		if (state.ship_y2 < 0) state.ship_y2 = 0;
 
 		
@@ -650,13 +588,12 @@ void MoveStuff()
 
 
 				state.shots[state.last_shot].alive = true;
-				state.shots[state.last_shot].x = state.ship_x + 35;
+				state.shots[state.last_shot].x = state.ship_x + 55;
 				state.shots[state.last_shot].y = state.ship_y - 3;
 				state.last_shot++;
 			}
 
 			else cool++;
-
 
 			//------Play sound fx_shoot
 			Mix_PlayChannel(-1, state.fx_shoot, 0);
@@ -668,6 +605,36 @@ void MoveStuff()
 			{
 				if (state.shots[i].x < SCREEN_WIDTH) state.shots[i].x += SHOT_SPEED;
 				else state.shots[i].alive = false;
+			}
+		}
+
+		//------TP
+		if (state.keyboard[SDL_SCANCODE_W] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_F] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_y -= 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_D] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_F] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_x += 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_S] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_F] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_y += 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_A] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_F] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_x -= 100;
 			}
 		}
 
@@ -689,7 +656,7 @@ void MoveStuff()
 
 
 				state.shots2[state.last_shot].alive = true;
-				state.shots2[state.last_shot].x = state.ship_x2 + 35;
+				state.shots2[state.last_shot].x = state.ship_x2 - 20;
 				state.shots2[state.last_shot].y = state.ship_y2 - 3;
 				state.last_shot++;
 			}
@@ -708,6 +675,36 @@ void MoveStuff()
 			{
 				if (state.shots2[i].x < SCREEN_WIDTH) state.shots2[i].x -= SHOT_SPEED;
 				else state.shots2[i].alive = false;
+			}
+		}
+
+		//------TP
+		if (state.keyboard[SDL_SCANCODE_UP] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_K] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_y2 -= 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_RIGHT] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_K] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_x2 += 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_DOWN] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_K] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_y2 += 100;
+			}
+		}
+		if (state.keyboard[SDL_SCANCODE_LEFT] == KEY_REPEAT && p1.alive == 1)
+		{
+			if (state.keyboard[SDL_SCANCODE_K] == KEY_DOWN && p1.alive == 1)
+			{
+				state.ship_x2 -= 100;
 			}
 		}
 
@@ -752,14 +749,6 @@ void Draw()
 		// NOTE: rec rectangle is being reused for next draws
 		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 		SDL_RenderCopy(state.renderer, state.background, NULL, &rec);
-
-
-		// Draw laser rectangle hitbox damage
-		DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 255, 0, 0, (Uint8)state.ShowHitBox });
-
-		if (state.lser == 1) {
-			DrawRectangle(state.laser_x, state.laser_y, state.laser_w, state.laser_h, { 100, 0, 0, 255 });
-		}
 	
 		// Draw meteorite texture
 		for (int p = 0; p < 10; p++) {
@@ -769,7 +758,6 @@ void Draw()
 			SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
 
 		}
-		
 
 		// Draw lifes textures
 		// P1
@@ -806,7 +794,7 @@ void Draw()
 		{
 			if (state.shots[i].alive)
 			{
-				DrawRectangle(state.shots[i].x, state.shots[i].y, 50, 20, { 0, 250, 0,  (Uint8)state.ShowHitBox });
+				DrawRectangle(state.shots[i].x, state.shots[i].y + 15, state.shot_w, state.shot_h, { 0, 250, 0,  (Uint8)state.ShowHitBox });
 				rec.x = state.shots[i].x; rec.y = state.shots[i].y;
 				SDL_RenderCopy(state.renderer, state.shot, NULL, &rec);
 			}
@@ -834,7 +822,7 @@ void Draw()
 		{
 			if (state.shots2[i].alive)
 			{
-				DrawRectangle(state.shots2[i].x, state.shots2[i].y, 50, 20, { 0, 250, 0, (Uint8)state.ShowHitBox });
+				DrawRectangle(state.shots2[i].x, state.shots2[i].y + 15, state.shot_w2, state.shot_h2, { 0, 250, 0, (Uint8)state.ShowHitBox });
 				rec.x = state.shots2[i].x; rec.y = state.shots2[i].y;
 				SDL_RenderCopy(state.renderer, state.shot2, NULL, &rec);
 			}
