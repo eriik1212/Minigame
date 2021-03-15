@@ -258,10 +258,9 @@ void hitbox() {
 					if (life1[i] == 0) {
 						SDL_DestroyTexture(state.life1[i]);
 					}
-
-					if (life1[0] == 0) {
-						p1.alive = 0;
-					}
+				}
+				if (life1[0] == 0) {
+					p1.alive = 0;
 				}
 		}
 	}
@@ -301,11 +300,12 @@ void Start()
 	IMG_Init(IMG_INIT_PNG);
 	state.background = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Windowsxp.png"));
 	state.menu = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/MENU.png"));
+	state.controls = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Control.png"));
 	state.p1win = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/endgamep1.png"));
 	state.p2win = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/endgamep2.png"));
-	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
 	state.shot = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW1.png"));
-	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/ship.png"));
+	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Explorer1.png"));
+	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Firefox1.png"));
 	state.shot2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW.png"));
 	state.meteorite = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/meteorite_sprite.png"));
 	for (int i = 0; i < MAX_LIFE; ++i) {
@@ -327,10 +327,10 @@ void Start()
 	state.musicIngame = Mix_LoadMUS("Assets/ingame.ogg");
 	state.musicvictory = Mix_LoadMUS("Assets/victory.ogg");
 	state.fx_shoot = Mix_LoadWAV("Assets/laser.wav");
+	Mix_VolumeChunk(state.fx_shoot, 25);
 
 	// L4: TODO 2: Start playing loaded music
 	Mix_PlayMusic(state.musicMenu, -1);
-
 
 	//Init srand
 	srand(time(NULL));
@@ -549,6 +549,15 @@ void MoveStuff()
 	} break;
 	case GAMEPLAY:
 	{
+		//----------------------------------------VOLUME
+		if (state.keyboard[SDL_SCANCODE_M] == KEY_DOWN){
+			Mix_VolumeMusic(0);
+			Mix_VolumeChunk(state.fx_shoot, 0);
+		}
+		if (state.keyboard[SDL_SCANCODE_U] == KEY_DOWN) {
+			Mix_VolumeMusic(MIX_MAX_VOLUME);
+			Mix_VolumeChunk(state.fx_shoot, 25);
+		}
 
 		int cool = 10;
 
@@ -556,18 +565,18 @@ void MoveStuff()
 		if ((state.ship_x + 64) > SCREEN_WIDTH/2) state.ship_x = (SCREEN_WIDTH/2) - 64;
 		if ((state.ship_y + 64) > SCREEN_HEIGHT) state.ship_y = SCREEN_HEIGHT - 64;
 		if (state.ship_x < 0) state.ship_x = 0;
-		if (state.ship_y < 0) state.ship_y = 0;
+		if (state.ship_y < 50) state.ship_y = 50;
 
 		//LIMITS of the MAP - SHIP-P2
 		if ((state.ship_x2) < SCREEN_WIDTH/2) state.ship_x2 = (SCREEN_WIDTH/2);
 		if ((state.ship_y2 + 64) > SCREEN_HEIGHT) state.ship_y2 = SCREEN_HEIGHT - 64;
 		if ((state.ship_x2 + 64 )> SCREEN_WIDTH) state.ship_x2 = SCREEN_WIDTH - 64;
-		if (state.ship_y2 < 0) state.ship_y2 = 0;
+		if (state.ship_y2 < 50) state.ship_y2 = 50;
 
 		
 		//-----------------------------------------------ESPECIAL KEYS-------------------------------------------------------
 		//SHOW HIT BOX
-		if (state.keyboard[SDL_SCANCODE_9] == KEY_DOWN) 
+		if (state.keyboard[SDL_SCANCODE_F1] == KEY_DOWN) 
 		{
 			if (state.ShowHitBox == 255)
 			{
@@ -611,6 +620,7 @@ void MoveStuff()
 
 			//------Play sound fx_shoot
 			Mix_PlayChannel(-1, state.fx_shoot, 0);
+
 		}
 		//-------LIFE OF  SHOTS PLAYER 
 		for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
@@ -732,20 +742,25 @@ void MoveStuff()
 			}
 		}
 
-		if (p2.alive2 == 0) state.currentScreen = ENDINGP1;	
-		if (p1.alive == 0) state.currentScreen = ENDINGP2;
+		if (p2.alive2 == 0) {
+			state.currentScreen = ENDINGP1;
+			Mix_FadeOutMusic(100);
+			Mix_PlayMusic(state.musicvictory, 0);
+		}
+		if (p1.alive == 0) {
+			state.currentScreen = ENDINGP2;
+			Mix_FadeOutMusic(100);
+			Mix_PlayMusic(state.musicvictory, 0);
+		}
 	} break;
 	case ENDINGP1:
 	{
-		if (p2.alive2 == 0) {
-			Mix_PlayMusic(state.musicvictory, -1);
-		}
+
+		
 	} break;
 	case ENDINGP2:
 	{
-		if (p1.alive == 0) {
-			Mix_PlayMusic(state.musicvictory, -1);
-		}
+
 	} break;
 	default: break;
 	}
@@ -767,7 +782,8 @@ void Draw()
 	} break;
 	case CONTROLS:
 	{
-
+		SDL_Rect rec = { -state.scroll, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+		SDL_RenderCopy(state.renderer, state.controls, NULL, &rec);
 	} break;
 	case GAMEPLAY:
 	{
