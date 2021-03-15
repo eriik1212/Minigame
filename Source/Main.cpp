@@ -34,6 +34,8 @@
 #define MAX_MOUSE_BUTTONS	   5
 #define JOYSTICK_DEAD_ZONE  8000
 
+#define MAX_METEO             10
+
 #define SHIP_SPEED			   8
 #define SHIP_SPEED2			   8
 #define MAX_SHIP_SHOTS		  32
@@ -73,6 +75,14 @@ struct Projectile
 	bool alive;
 };
 
+struct meteorite
+{
+	int x, y, w, h;
+	int alive = 1;
+
+
+};
+
 struct Player
 {
 	int alive = 1;
@@ -85,11 +95,6 @@ struct Player2
 
 }p2;
 
-struct meteorite
-{
-	bool alive;
-
-}meteo[10];
 
 // Global context to store our game state data
 struct GlobalState
@@ -120,7 +125,7 @@ struct GlobalState
 	SDL_Texture* ship2;
 	SDL_Texture* shot2;
 	SDL_Texture* laser;
-	SDL_Texture* meteorite;
+	SDL_Texture* meteori;
 	SDL_Texture* life1[MAX_LIFE];
 	SDL_Texture* life2[MAX_LIFE];
 	int background_width;
@@ -132,6 +137,10 @@ struct GlobalState
 	Mix_Chunk* fx_shoot;
 
 	// Game elements
+	int time;
+	int time2;
+	meteorite meteo[MAX_METEO];
+
 	int ShowHitBox = 0;
 	int lser;
 
@@ -228,10 +237,43 @@ void hitbox() {
 		life2[i] = 1;
 	}
 
+	//METEORITES 
+	for (int i = 0; i < MAX_METEO; i++) {
+
+		if (state.ship_x<state.meteo[i].x + state.meteo[i].w && state.ship_x + state.ship_w > state.meteo[i].x && state.ship_y < state.meteo[i].y + state.meteo[i].h && state.ship_h + state.ship_y>state.meteo[i].y)
+		{
+			updateLifeIndicatorPlayer2(life1, 1);
+			for (int i = 0; i < MAX_LIFE; ++i) {
+
+				if (life1[i] == 0) {
+					SDL_DestroyTexture(state.life1[i]);
+				}
+
+			}
+			if (life1[MAX_LIFE - 1] == 0) {
+				p1.alive = 0;
+			}
+		}
+		if (state.ship_x2 < state.meteo[i].x + state.meteo[i].w && state.ship_x2 + state.ship_w2 > state.meteo[i].x && state.ship_y2 < state.meteo[i].y + state.meteo[i].h && state.ship_h2 + state.ship_y2 > state.meteo[i].y)
+		{
+			updateLifeIndicatorPlayer2(life2, 1);
+			for (int i = 0; i < MAX_LIFE; ++i) {
+
+				if (life2[i] == 0) {
+					SDL_DestroyTexture(state.life2[i]);
+				}
+
+			}
+			if (life2[MAX_LIFE - 1] == 0) {
+				p2.alive2 = 0;
+			}
+		}
+	}
+
 	//SHOTS
 	for (int i = 0; i < MAX_SHIP_SHOTS; ++i)
 	{
-		if (state.ship_x2< state.shots[i].x + state.shot_w && state.ship_x2 + state.ship_w2>state.shots[i].x && state.ship_y2<state.shots[i].y + state.shot_h && state.ship_h2 + state.ship_y2>state.shots[i].y)
+		if (state.ship_x2 <= state.shots[i].x && state.shot_w && state.ship_x2 + state.ship_w2 >= state.shots[i].x && state.ship_y2 <= state.shots[i].y + state.shot_h && state.ship_h2 + state.ship_y2 >= state.shots[i].y)
 		{
 
 			state.shots[i].alive=false;
@@ -307,7 +349,9 @@ void Start()
 	state.ship = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Explorer1.png"));
 	state.ship2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Firefox1.png"));
 	state.shot2 = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/shotW.png"));
-	state.meteorite = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/meteorite_sprite.png"));
+	state.meteori = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/meteorite_sprite.png"));
+
+
 	for (int i = 0; i < MAX_LIFE; ++i) {
 		state.life1[i] = SDL_CreateTextureFromSurface(state.renderer, IMG_Load("Assets/Heart.png"));
 	}
@@ -336,6 +380,17 @@ void Start()
 	srand(time(NULL));
 
 	// Init game variables
+
+	//METEORITE
+	for (int i = 0; i < MAX_METEO; i++) {
+		state.meteo[i].x = (rand() % SCREEN_HEIGHT * 2);
+		state.meteo[i].y = 1000;
+
+	}
+
+	state.time = 1000;
+	state.time2 = 100000;
+
 	state.shot_w = 30;
 	state.shot_h = 30;
 
@@ -355,10 +410,6 @@ void Start()
 	state.last_shot = 0;
 	state.scroll = 0;
 
-	state.meteorite_y[10] = SCREEN_HEIGHT;
-	state.meteorite_x[10] = (rand() % SCREEN_WIDTH);
-	state.meteorite_w[10] = 100;
-	state.meteorite_h[10] = 20;
 
 	int sepx1=0;
 	for (int i = 0; i < MAX_LIFE; ++i) {
@@ -395,7 +446,7 @@ void Finish()
 	SDL_DestroyTexture(state.background);
 	SDL_DestroyTexture(state.ship);
 	SDL_DestroyTexture(state.ship2);
-	SDL_DestroyTexture(state.meteorite);
+	SDL_DestroyTexture(state.meteori);
 	for (int i = 0; i < MAX_LIFE; ++i) {
 		SDL_DestroyTexture(state.life1[i]);
 	}
@@ -531,6 +582,33 @@ bool CheckInput()
 // ----------------------------------------------------------------
 void MoveStuff()
 {
+	//METEORITE MOVE
+	for (int i = 0; i < MAX_METEO; i++) {
+
+		if (state.time > 0) state.time--;
+
+		state.time2--;
+
+		if (state.time == 0) {
+			if (state.time2 <= 50000 && state.time2 >= 5000) {
+				state.meteo[i].y += 2;
+			}
+
+			else if (state.time2 > 10000) {
+				state.meteo[i].y += 1;
+			}
+			else if (state.time2 <= 5000) {
+				state.meteo[i].y += 4;
+			}
+		}
+
+		if (state.meteo[i].y >= SCREEN_WIDTH) {
+			state.meteo[i].x = (rand() % SCREEN_HEIGHT * 2);
+			state.meteo[i].y = rand() % -1000 - 1000;
+
+		}
+	}
+
 	switch (state.currentScreen)
 	{
 	case MENU:
@@ -732,16 +810,8 @@ void MoveStuff()
 			}
 		}
 
-		//meteorite move
-		for (int i = 0; i < 10; ++i)
-		{
-			state.meteorite_y[i] += 1;
-			if (state.meteorite_y[i] < SCREEN_WIDTH) {
-				meteo[i].alive = false;
-
-			}
-		}
-
+	
+		
 		if (p2.alive2 == 0) {
 			state.currentScreen = ENDINGP1;
 			Mix_FadeOutMusic(100);
@@ -793,12 +863,30 @@ void Draw()
 		SDL_RenderCopy(state.renderer, state.background, NULL, &rec);
 	
 		// Draw meteorite texture
-		for (int p = 0; p < 10; p++) {
+		for (int x = 0; x < MAX_METEO; x++) {
+			int tex[MAX_METEO];
+			if (state.meteo[x].alive == 1) {
 
-			DrawRectangle(state.meteorite_x[p]+rand()%800, state.meteorite_y[p], state.ship_w, state.ship_h, { 255, 0, 0,  (Uint8)state.ShowHitBox });
-			rec.x = state.meteorite_x[p]; rec.y = state.meteorite_y[p]; rec.w = 96; rec.h = 96;
-			SDL_RenderCopy(state.renderer, state.meteorite, NULL, &rec);
+				 tex[x] = rand() % 2;
 
+				if (tex[x] == 0) {
+					rec.x = state.meteo[x].x; rec.y = state.meteo[x].y; rec.w = 120; rec.h = 120;
+					SDL_RenderCopy(state.renderer, state.meteori, NULL, &rec);
+					DrawRectangle(state.meteo[x].x, state.meteo[x].y, rec.w, rec.h, { 255, 0, 111,(Uint8)state.ShowHitBox });
+				}
+				else if (tex[x] == 1) {
+					rec.x = state.meteo[x].x; rec.y = state.meteo[x].y; rec.w = 119; rec.h = 119;
+					SDL_RenderCopy(state.renderer, state.meteori, NULL, &rec);
+					DrawRectangle(state.meteo[x].x, state.meteo[x].y, rec.w, rec.h, { 255, 0, 111,(Uint8)state.ShowHitBox });
+				}
+				else if (tex[x] == 2) {
+					rec.x = state.meteo[x].x; rec.y = state.meteo[x].y; rec.w = 93; rec.h = 89;
+					SDL_RenderCopy(state.renderer, state.meteori, NULL, &rec);
+					DrawRectangle(state.meteo[x].x, state.meteo[x].y, rec.w,rec.h, { 255, 0, 111,(Uint8)state.ShowHitBox });
+				}
+				
+				
+			}
 		}
 
 		// Draw lifes textures
