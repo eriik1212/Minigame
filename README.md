@@ -12,12 +12,12 @@ _W Fight!_ is a Shooter PvP Minigame developed by _Effective_.
  
 ## Controls
 
- **Player 1**
+**Player 1**
 -  WASD - Movement
 - F - Teleport
 - G - Shoot
  
-  **Player 2**
+**Player 2**
  - _Arrows_ - MOVEMENT
  - K - Teleport
  - L - Shoot
