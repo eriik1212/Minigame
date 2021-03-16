@@ -13,22 +13,22 @@ _W Fight!_ is a Shooter PvP Minigame developed by _Effective_.
 ## Controls
 
  **Player 1**
- WASD - Movement
- F - Teleport
- G - Shoot
+-  WASD - Movement
+- F - Teleport
+- G - Shoot
  
   **Player 2**
-  _Arrows_ - MOVEMENT
-  K - Teleport
-  L - Shoot
+ - _Arrows_ - MOVEMENT
+ - K - Teleport
+ - L - Shoot
 
 ## Developers
 
- - Erik Martín Garzón - {Code}
- - Jan Carbonell Muñoz - {Art}
- - Juan de Dios Garía Salguero - {Code}
- - Chising Joaquin Lien - {Art}
- - David Boces Obis - {Code, Audio}
+ - Erik Martín Garzón - _Code_
+ - Jan Carbonell Muñoz - _Art_
+ - Juan de Dios Garía Salguero - _Code_
+ - Chising Joaquin Lien - _Art_
+ - David Boces Obis - _Code & Audio_
 
 ## License
 
